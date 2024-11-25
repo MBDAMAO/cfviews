@@ -1,0 +1,20 @@
+name = "cfviews"
+compatibility_date = "2024-11-25"
+main = "src/index.ts"
+minify = true
+
+[vars]
+DOMAIN = "https://damaoz.site"
+PAGESIZE = 10
+
+[[kv_namespaces]]
+binding = "KV"
+id = "3243086648f045868df62bf34066fab6"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cfviews_db"
+database_id = "bef5ccbc-5985-4eb6-8fa9-885f7d74b177"
+
+[observability]
+enabled = true # Enable observability features

@@ -3,21 +3,16 @@ import { ArticleRow } from "../models";
 
 export const getPostView = async (c: Context) => {
     const post_id = c.req.param("key");
-    try {
-        // @ts-ignore
-        let article = await c.env.DB.prepare(
-            "SELECT * FROM articles WHERE post_id = ?"
-        )
-            .bind(post_id)
-            .first<ArticleRow>();
-        if (!article) {
-            return c.json({ views: 0 });
-        } else {
-            return c.json({ views: article.views });
-        }
-    } catch (e) {
-        console.log(e);
-        return c.json({ err: e }, 500);
+    // @ts-ignore
+    let article = await c.env.DB.prepare(
+        "SELECT * FROM articles WHERE post_id = ?"
+    )
+        .bind(post_id)
+        .first<ArticleRow>();
+    if (!article) {
+        return 0;
+    } else {
+        return article.views;
     }
 };
 
@@ -47,8 +42,8 @@ async function view_post_handler(c: Context) {
         let key = "[" + post_id + "][" + ip + "]";
         let check = await c.env.KV.get(key);
         if (check == "true") {
-            // 如果存在，说明已经浏览过，不用管
-
+            // 如果存在，说明已经浏览过，不用管。返回阅读数即可
+            return c.json({ views: await getPostView(c) });
         }
         else {
             // 添加一个30分钟的浏览KV
@@ -66,22 +61,22 @@ async function view_post_handler(c: Context) {
                 )
                     .bind(post_id, 1)
                     .run();
+                return c.json({ views: 1 });
             } else {
                 await c.env.DB.prepare(
                     "UPDATE articles SET views = ? WHERE post_id = ?"
                 )
                     .bind(article.views + 1, post_id)
                     .run();
+                return c.json({ views: article.views + 1 });
             }
         }
     } catch (e) {
         console.log(e);
+        return c.json({ err: e }, 500);
     }
 }
 
 export const updatePostView = async (c: Context) => {
-    // 直接返回阅读数，然后异步判断更新
-    let views = await getPostView(c);
-    await view_post_handler(c);
-    return views;
+    return view_post_handler(c);
 };
